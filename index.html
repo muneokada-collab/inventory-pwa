@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="在庫管理">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>備品在庫管理</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f4;
+    --bg3: #eeede8;
+    --text: #1a1a1a;
+    --text2: #6b6b68;
+    --text3: #9b9b98;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --danger: #c0392b;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --bg2: #242424;
+      --bg3: #2e2e2e;
+      --text: #f0f0ee;
+      --text2: #a0a09e;
+      --text3: #686866;
+      --border: rgba(255,255,255,0.12);
+      --border2: rgba(255,255,255,0.22);
+      --danger: #e74c3c;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+    background: var(--bg3);
+    color: var(--text);
+    min-height: 100vh;
+    padding-top: var(--safe-top);
+    padding-bottom: calc(var(--safe-bottom) + 16px);
+  }
+  .topbar {
+    background: var(--bg);
+    border-bottom: 0.5px solid var(--border);
+    padding: 14px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topbar-title { font-size: 17px; font-weight: 600; color: var(--text); }
+  .btn-add {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .content { padding: 12px 16px; }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .metric {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px;
+    border: 0.5px solid var(--border);
+  }
+  .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 3px; }
+  .metric-value { font-size: 24px; font-weight: 600; color: var(--text); }
+  .metric-value.danger { color: var(--danger); }
+  .alert-banner {
+    background: #faeeda;
+    border: 0.5px solid #ef9f27;
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #633806;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+  }
+  .search-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .search-row input, .search-row select {
+    background: var(--bg);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .search-row input { flex: 1; }
+  .search-row select { width: 108px; }
+  .item-card {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .item-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+  .item-name { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; line-height: 1.4; }
+  .badge { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+  .badge-ok { background: #eaf3de; color: #3b6d11; }
+  .badge-low { background: #faeeda; color: #854f0b; }
+  .badge-out { background: #fcebeb; color: #a32d2d; }
+  .item-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cat-badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; }
+  .cat-文具 { background: #eeedfe; color: #3c3489; }
+  .cat-電子機器 { background: #e6f1fb; color: #185fa5; }
+  .cat-紙類 { background: #e1f5ee; color: #0f6e56; }
+  .cat-清掃用品 { background: #faeeda; color: #854f0b; }
+  .cat-その他 { background: #f1efe8; color: #5f5e5a; }
+  .qty-ctrl { display: flex; align-items: center; gap: 6px; }
+  .qty-label { font-size: 12px; color: var(--text2); }
+  .qbtn {
+    width: 34px; height: 34px;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-md);
+    background: var(--bg2);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text);
+    transition: background 0.1s;
+  }
+  .qbtn:active { background: var(--bg3); }
+  .qty-num { min-width: 36px; text-align: center; font-size: 16px; font-weight: 600; color: var(--text); }
+  .item-actions { display: flex; gap: 8px; padding-top: 10px; border-top: 0.5px solid var(--border); }
+  .action-btn {
+    flex: 1; padding: 9px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    color: var(--text2);
+  }
+  .action-btn.danger { color: var(--danger); }
+  .action-btn:active { background: var(--bg2); }
+  .empty { text-align: center; color: var(--text3); padding: 3rem 0; font-size: 14px; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    display: flex; align-items: flex-end;
+    padding-bottom: var(--safe-bottom);
+  }
+  .modal {
+    background: var(--bg);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px calc(20px + var(--safe-bottom));
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .modal h3 { font-size: 17px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 5px; }
+  .form-row input, .form-row select {
+    width: 100%;
+    background: var(--bg2);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-md);
+    padding: 11px 13px;
+    font-size: 16px;
+    color: var(--text);
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .btn-save {
+    flex: 2;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-cancel {
+    flex: 1;
+    background: var(--bg2);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 13px;
+    font-size: 15px;
+    color: var(--text2);
+    cursor: pointer;
+  }
+
+  /* Install banner */
+  .install-banner {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .install-banner strong { color: var(--text); }
+  .install-btn {
+    margin-left: auto;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-title">📦 備品在庫管理</span>
+  <button class="btn-add" onclick="openAdd()">＋ 追加</button>
+</div>
+
+<div class="content">
+  <div id="install-area"></div>
+  <div class="summary-grid" id="summary"></div>
+  <div id="alert-area"></div>
+  <div class="search-row">
+    <input type="search" id="search" placeholder="🔍 検索..." oninput="render()">
+    <select id="cat-filter" onchange="render()">
+      <option value="">全カテゴリ</option>
+      <option>文具</option>
+      <option>電子機器</option>
+      <option>紙類</option>
+      <option>清掃用品</option>
+      <option>その他</option>
+    </select>
+  </div>
+  <div id="card-list"></div>
+</div>
+
+<div id="modal-area"></div>
+
+<script>
+const STORAGE_KEY = 'inventory_items';
+const DEFAULT_ITEMS = [
+  {id:1,name:'ボールペン（黒）',cat:'文具',qty:45,min:20},
+  {id:2,name:'A4コピー用紙',cat:'紙類',qty:8,min:10},
+  {id:3,name:'付箋ノート',cat:'文具',qty:3,min:5},
+  {id:4,name:'ホチキス',cat:'文具',qty:12,min:5},
+  {id:5,name:'トナーカートリッジ',cat:'電子機器',qty:0,min:2},
+  {id:6,name:'マウス（USB）',cat:'電子機器',qty:6,min:3},
+  {id:7,name:'ゴミ袋（大）',cat:'清掃用品',qty:30,min:15},
+  {id:8,name:'コピー用紙（B5）',cat:'紙類',qty:20,min:8},
+];
+
+let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || DEFAULT_ITEMS;
+let nextId = Math.max(...items.map(i => i.id), 0) + 1;
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function st(item) {
+  return item.qty === 0 ? 'out' : item.qty <= item.min ? 'low' : 'ok';
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const cat = document.getElementById('cat-filter').value;
+  const filtered = items.filter(i =>
+    (!q || i.name.toLowerCase().includes(q)) && (!cat || i.cat === cat)
+  );
+
+  const low = items.filter(i => st(i) === 'low').length;
+  const out = items.filter(i => st(i) === 'out').length;
+  document.getElementById('summary').innerHTML = `
+    <div class="metric">
+      <div class="metric-label">登録備品数</div>
+      <div class="metric-value">${items.length}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">要注意 / 在庫切れ</div>
+      <div class="metric-value danger">${low} / ${out}</div>
+    </div>
+  `;
+
+  const alerts = items.filter(i => st(i) !== 'ok');
+  document.getElementById('alert-area').innerHTML = alerts.length
+    ? `<div class="alert-banner">⚠️ <span><strong>${alerts.length}件</strong>要確認：${alerts.map(i => i.name).join('、')}</span></div>`
+    : '';
+
+  const bc = { ok: 'badge-ok', low: 'badge-low', out: 'badge-out' };
+  const bt = { ok: '在庫あり', low: '在庫少', out: '在庫切れ' };
+
+  document.getElementById('card-list').innerHTML = filtered.length
+    ? filtered.map(item => {
+      const s = st(item);
+      return `<div class="item-card">
+        <div class="item-top">
+          <span class="item-name">${item.name}</span>
+          <span class="badge ${bc[s]}">${bt[s]}</span>
+        </div>
+        <div class="item-meta">
+          <span class="cat-badge cat-${item.cat}">${item.cat}</span>
+          <div class="qty-ctrl">
+            <span class="qty-label">在庫</span>
+            <button class="qbtn" onclick="chg(${item.id},-1)" aria-label="減らす">−</button>
+            <span class="qty-num">${item.qty}</span>
+            <button class="qbtn" onclick="chg(${item.id},1)" aria-label="増やす">＋</button>
+            <span class="qty-label">/ 最低${item.min}</span>
+          </div>
+        </div>
+        <div class="item-actions">
+          <button class="action-btn" onclick="openEdit(${item.id})">✏️ 編集</button>
+          <button class="action-btn danger" onclick="del(${item.id})">🗑 削除</button>
+        </div>
+      </div>`;
+    }).join('')
+    : `<div class="empty"><div class="empty-icon">📭</div>該当する備品がありません</div>`;
+}
+
+function chg(id, d) {
+  const i = items.find(x => x.id === id);
+  if (i) { i.qty = Math.max(0, i.qty + d); save(); render(); }
+}
+
+function del(id) {
+  if (confirm('この備品を削除しますか？')) {
+    items = items.filter(x => x.id !== id);
+    save(); render();
+  }
+}
+
+function openAdd() { showModal(null); }
+function openEdit(id) { showModal(items.find(x => x.id === id)); }
+
+function showModal(item) {
+  const isEdit = !!item;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = e => { if (e.target === overlay) closeModal(); };
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h3>${isEdit ? '備品を編集' : '備品を追加'}</h3>
+      <div class="form-row"><label>備品名</label><input id="m-name" type="text" value="${isEdit ? item.name : ''}" placeholder="例：ボールペン"></div>
+      <div class="form-row"><label>カテゴリ</label>
+        <select id="m-cat">
+          ${['文具','電子機器','紙類','清掃用品','その他'].map(c => `<option${isEdit && item.cat === c ? ' selected' : ''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row"><label>現在の在庫数</label><input id="m-qty" type="number" min="0" inputmode="numeric" value="${isEdit ? item.qty : 0}"></div>
+      <div class="form-row"><label>最低在庫数（アラート基準）</label><input id="m-min" type="number" min="0" inputmode="numeric" value="${isEdit ? item.min : 5}"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-save" onclick="saveItem(${isEdit ? item.id : 'null'})">${isEdit ? '保存する' : '追加する'}</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-area').appendChild(overlay);
+  setTimeout(() => document.getElementById('m-name').focus(), 100);
+}
+
+function closeModal() {
+  const area = document.getElementById('modal-area');
+  area.innerHTML = '';
+}
+
+function saveItem(id) {
+  const name = document.getElementById('m-name').value.trim();
+  const cat = document.getElementById('m-cat').value;
+  const qty = parseInt(document.getElementById('m-qty').value) || 0;
+  const min = parseInt(document.getElementById('m-min').value) || 0;
+  if (!name) { alert('備品名を入力してください'); return; }
+  if (id === null) {
+    items.push({ id: nextId++, name, cat, qty, min });
+  } else {
+    const i = items.find(x => x.id === id);
+    if (i) { i.name = name; i.cat = cat; i.qty = qty; i.min = min; }
+  }
+  save(); closeModal(); render();
+}
+
+// PWA install prompt
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-area').innerHTML = `
+    <div class="install-banner">
+      <span>📲 <strong>ホーム画面に追加</strong>してオフラインでも使えます</span>
+      <button class="install-btn" onclick="installApp()">追加する</button>
+    </div>
+  `;
+});
+
+function installApp() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      document.getElementById('install-area').innerHTML = '';
+    });
+  }
+}
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-area').innerHTML = '';
+});
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(console.error);
+}
+
+render();
+</script>
+</body>
+</html>
