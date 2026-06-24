@@ -109,8 +109,6 @@
   .setting-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;}
   .setting-desc{font-size:13px;color:var(--text2);margin-bottom:12px;}
   .btn-logout{width:100%;padding:12px;border:0.5px solid var(--danger);border-radius:var(--radius-md);background:none;color:var(--danger);font-size:14px;font-weight:500;cursor:pointer;}
-  .admin-gate{background:var(--bg2);border-radius:var(--radius-md);padding:14px;margin-bottom:16px;border:0.5px solid var(--border);}
-  .admin-gate p{font-size:13px;color:var(--text2);margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -145,7 +143,6 @@
 // 共通パスワード（研究室員全員が使う）
 const USER_PASS = 'lab2024';
 // 管理者パスワード（あなただけが知っている）
-const ADMIN_PASS = 'admin9999';
 // =========================
 
 const STORAGE_KEY = 'vetpharm_items';
@@ -155,54 +152,54 @@ const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 5 * 60 * 1000;
 
 let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || [
-  {id:1,name:'BCA assay',loc:'ウエスタンの棚',cat:'試薬',qty:null,min:1},
-  {id:2,name:'Trident femto',loc:'ショーケース冷蔵庫(旧い方)',cat:'試薬',qty:null,min:1},
-  {id:3,name:'LumiFlash prime',loc:'ショーケース冷蔵庫(旧い方)',cat:'試薬',qty:null,min:1},
-  {id:4,name:'シリンジ(1 ml)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:null,min:1},
-  {id:5,name:'シリンジ(10 ml)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:null,min:1},
-  {id:6,name:'シリンジ(30 ml)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:null,min:1},
-  {id:7,name:'シリンジ(5 ml)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:null,min:1},
-  {id:8,name:'注射針(20G)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:null,min:1},
-  {id:9,name:'注射針(23G)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:null,min:1},
-  {id:10,name:'注射針(27G)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:null,min:1},
-  {id:11,name:'ドライゾール(一斗缶)',loc:'倉庫',cat:'試薬(一般)',qty:null,min:1},
-  {id:12,name:'メタノール(一斗缶)',loc:'倉庫',cat:'試薬(一般)',qty:null,min:1},
-  {id:13,name:'キシレン(一斗缶)',loc:'倉庫',cat:'試薬(一般)',qty:null,min:1},
-  {id:14,name:'シリンジフィルター(0.22 μm)',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:1},
-  {id:15,name:'シリンジフィルター(0.45 μm)',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:1},
-  {id:16,name:'チューブ(1.5 ml)',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:1},
-  {id:17,name:'チューブ(15 ml)',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:1},
-  {id:18,name:'チューブ(5 ml)',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:1},
-  {id:19,name:'チューブ(50 ml)',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:1},
-  {id:20,name:'パスツールピペット(ガラス製)',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:1},
-  {id:21,name:'パラフィルム',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:1},
-  {id:22,name:'ピペットチップ(1000 μl)',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:3},
-  {id:23,name:'ピペットチップ(10 μl)',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:3},
-  {id:24,name:'ピペットチップ(200 μl)',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:3},
-  {id:25,name:'プロワイプ',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:5},
-  {id:26,name:'滅菌インジケーターテープ',loc:'倉庫',cat:'消耗品(一般)',qty:null,min:1},
-  {id:27,name:'ニトリルグローブL',loc:'組織部屋の前の棚',cat:'消耗品(一般)',qty:null,min:1},
-  {id:28,name:'ニトリルグローブM',loc:'組織部屋の前の棚',cat:'消耗品(一般)',qty:null,min:1},
-  {id:29,name:'ニトリルグローブS',loc:'組織部屋の前の棚',cat:'消耗品(一般)',qty:null,min:1},
-  {id:30,name:'ニトリルグローブSS',loc:'組織部屋の前の棚',cat:'消耗品(一般)',qty:null,min:1},
-  {id:31,name:'細胞培養・10 cmシャーレ',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:null,min:5},
-  {id:32,name:'細胞培養・12 well plate',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:null,min:1},
-  {id:33,name:'細胞培養・24 well plate',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:null,min:1},
-  {id:34,name:'細胞培養・35 mmシャーレ',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:null,min:5},
-  {id:35,name:'細胞培養・6 well plate',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:null,min:1},
-  {id:36,name:'細胞培養・96 well plate',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:null,min:1},
-  {id:37,name:'ディスポーザブルピペット (10 ml)',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:null,min:1},
-  {id:38,name:'ディスポーザブルピペット (2 ml)',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:null,min:1},
-  {id:39,name:'ディスポーザブルピペット (5 ml)',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:null,min:1},
-  {id:40,name:'DMEM (低グルコース)',loc:'培養部屋・冷蔵庫',cat:'試薬(細胞培養)',qty:null,min:3},
-  {id:41,name:'PS (培地用の抗生剤)',loc:'培養部屋の冷凍庫',cat:'試薬(細胞培養)',qty:null,min:1},
-  {id:42,name:'TE (トリプシン溶液)',loc:'培養部屋の冷蔵庫と冷凍庫',cat:'試薬(細胞培養)',qty:null,min:1},
-  {id:43,name:'TN (トリプシン中和液）',loc:'培養部屋の冷蔵庫と冷凍庫',cat:'試薬(細胞培養)',qty:null,min:1},
-  {id:44,name:'CST Mouse二次抗体(HRP-linked)',loc:'マイナス30℃冷凍庫①',cat:'抗体',qty:null,min:1},
-  {id:45,name:'CST Rabbit二次抗体 (HRP-linked)',loc:'マイナス30℃冷凍庫①',cat:'抗体',qty:null,min:1},
-  {id:46,name:'Lysis buffer',loc:'マイナス30℃冷凍庫①',cat:'試薬(一般)',qty:null,min:1},
-  {id:47,name:'プロテアーゼ阻害剤',loc:'マイナス30℃冷凍庫①',cat:'試薬(一般)',qty:null,min:1},
-  {id:48,name:'サンプルボックス',loc:'マイナス30℃冷凍庫②',cat:'消耗品',qty:null,min:5},
+  {id:1,name:'BCA assay',loc:'ウエスタンの棚',cat:'試薬',qty:0,min:1},
+  {id:2,name:'Trident femto',loc:'ショーケース冷蔵庫(旧い方)',cat:'試薬',qty:0,min:1},
+  {id:3,name:'LumiFlash prime',loc:'ショーケース冷蔵庫(旧い方)',cat:'試薬',qty:0,min:1},
+  {id:4,name:'シリンジ(1 ml)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:0,min:1},
+  {id:5,name:'シリンジ(10 ml)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:0,min:1},
+  {id:6,name:'シリンジ(30 ml)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:0,min:1},
+  {id:7,name:'シリンジ(5 ml)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:0,min:1},
+  {id:8,name:'注射針(20G)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:0,min:1},
+  {id:9,name:'注射針(23G)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:0,min:1},
+  {id:10,name:'注射針(27G)',loc:'生体実験周囲',cat:'消耗品(一般)',qty:0,min:1},
+  {id:11,name:'ドライゾール(一斗缶)',loc:'倉庫',cat:'試薬(一般)',qty:0,min:1},
+  {id:12,name:'メタノール(一斗缶)',loc:'倉庫',cat:'試薬(一般)',qty:0,min:1},
+  {id:13,name:'キシレン(一斗缶)',loc:'倉庫',cat:'試薬(一般)',qty:0,min:1},
+  {id:14,name:'シリンジフィルター(0.22 μm)',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:1},
+  {id:15,name:'シリンジフィルター(0.45 μm)',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:1},
+  {id:16,name:'チューブ(1.5 ml)',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:1},
+  {id:17,name:'チューブ(15 ml)',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:1},
+  {id:18,name:'チューブ(5 ml)',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:1},
+  {id:19,name:'チューブ(50 ml)',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:1},
+  {id:20,name:'パスツールピペット(ガラス製)',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:1},
+  {id:21,name:'パラフィルム',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:1},
+  {id:22,name:'ピペットチップ(1000 μl)',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:3},
+  {id:23,name:'ピペットチップ(10 μl)',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:3},
+  {id:24,name:'ピペットチップ(200 μl)',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:3},
+  {id:25,name:'プロワイプ',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:5},
+  {id:26,name:'滅菌インジケーターテープ',loc:'倉庫',cat:'消耗品(一般)',qty:0,min:1},
+  {id:27,name:'ニトリルグローブL',loc:'組織部屋の前の棚',cat:'消耗品(一般)',qty:0,min:1},
+  {id:28,name:'ニトリルグローブM',loc:'組織部屋の前の棚',cat:'消耗品(一般)',qty:0,min:1},
+  {id:29,name:'ニトリルグローブS',loc:'組織部屋の前の棚',cat:'消耗品(一般)',qty:0,min:1},
+  {id:30,name:'ニトリルグローブSS',loc:'組織部屋の前の棚',cat:'消耗品(一般)',qty:0,min:1},
+  {id:31,name:'細胞培養・10 cmシャーレ',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:0,min:5},
+  {id:32,name:'細胞培養・12 well plate',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:0,min:1},
+  {id:33,name:'細胞培養・24 well plate',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:0,min:1},
+  {id:34,name:'細胞培養・35 mmシャーレ',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:0,min:5},
+  {id:35,name:'細胞培養・6 well plate',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:0,min:1},
+  {id:36,name:'細胞培養・96 well plate',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:0,min:1},
+  {id:37,name:'ディスポーザブルピペット (10 ml)',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:0,min:1},
+  {id:38,name:'ディスポーザブルピペット (2 ml)',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:0,min:1},
+  {id:39,name:'ディスポーザブルピペット (5 ml)',loc:'培養室前の棚',cat:'消耗品(細胞培養)',qty:0,min:1},
+  {id:40,name:'DMEM (低グルコース)',loc:'培養部屋・冷蔵庫',cat:'試薬(細胞培養)',qty:0,min:3},
+  {id:41,name:'PS (培地用の抗生剤)',loc:'培養部屋の冷凍庫',cat:'試薬(細胞培養)',qty:0,min:1},
+  {id:42,name:'TE (トリプシン溶液)',loc:'培養部屋の冷蔵庫と冷凍庫',cat:'試薬(細胞培養)',qty:0,min:1},
+  {id:43,name:'TN (トリプシン中和液）',loc:'培養部屋の冷蔵庫と冷凍庫',cat:'試薬(細胞培養)',qty:0,min:1},
+  {id:44,name:'CST Mouse二次抗体(HRP-linked)',loc:'マイナス30℃冷凍庫①',cat:'抗体',qty:0,min:1},
+  {id:45,name:'CST Rabbit二次抗体 (HRP-linked)',loc:'マイナス30℃冷凍庫①',cat:'抗体',qty:0,min:1},
+  {id:46,name:'Lysis buffer',loc:'マイナス30℃冷凍庫①',cat:'試薬(一般)',qty:0,min:1},
+  {id:47,name:'プロテアーゼ阻害剤',loc:'マイナス30℃冷凍庫①',cat:'試薬(一般)',qty:0,min:1},
+  {id:48,name:'サンプルボックス',loc:'マイナス30℃冷凍庫②',cat:'消耗品',qty:0,min:5},
 ];
 let nextId = Math.max(...items.map(i => i.id), 0) + 1;
 function saveItems() { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
@@ -254,7 +251,7 @@ function tryLogin() {
   const val = inp.value;
   const a = getAuth();
   const currentUserPass = localStorage.getItem('vetpharm_user_pass') || USER_PASS;
-  if (val === currentUserPass || val === ADMIN_PASS) {
+  if (val === currentUserPass) {
     a.attempts = 0; a.lockedUntil = 0; a.authed = true; setAuth(a);
     document.getElementById('lock-area').innerHTML = '';
     showApp();
@@ -344,25 +341,6 @@ function openSettings() {
       <h3>⚙️ 設定</h3>
 
       <div class="setting-section">
-        <div class="setting-title">🔑 管理者メニュー</div>
-        <div class="setting-desc">管理者パスワードを入力すると共通パスワードを変更できます。</div>
-        <div class="admin-gate">
-          <p>管理者パスワードを入力してください</p>
-          <div class="form-row" style="margin-bottom:8px;">
-            <input type="password" id="admin-gate-pw" placeholder="管理者パスワード">
-          </div>
-          <button class="btn-save" style="width:100%;" onclick="unlockAdmin()">管理者として認証する</button>
-          <div class="msg error" id="admin-gate-msg"></div>
-        </div>
-        <div id="admin-panel" style="display:none;">
-          <div class="form-row"><label>新しい共通パスワード</label><input type="password" id="s-new" placeholder="新しいパスワード（4文字以上）"></div>
-          <div class="form-row"><label>確認（もう一度）</label><input type="password" id="s-new2" placeholder="新しいパスワード（確認）"></div>
-          <div class="msg error" id="pw-msg"></div>
-          <button class="btn-save" style="width:100%;margin-top:8px;" onclick="changeUserPass()">共通パスワードを変更する</button>
-        </div>
-      </div>
-
-      <div class="setting-section">
         <div class="setting-title">🚪 ログアウト</div>
         <div class="setting-desc">次回起動時にパスワード入力が必要になります。</div>
         <button class="btn-logout" onclick="logout()">ログアウト</button>
@@ -371,30 +349,6 @@ function openSettings() {
       <div class="modal-actions"><button class="btn-cancel" style="flex:1;" onclick="closeModal()">閉じる</button></div>
     </div>`;
   document.getElementById('modal-area').appendChild(overlay);
-}
-
-function unlockAdmin() {
-  const pw = document.getElementById('admin-gate-pw').value;
-  const msg = document.getElementById('admin-gate-msg');
-  if (pw === ADMIN_PASS) {
-    document.getElementById('admin-panel').style.display = 'block';
-    document.getElementById('admin-gate-pw').closest('.admin-gate').style.display = 'none';
-    msg.textContent = '';
-  } else {
-    msg.textContent = '管理者パスワードが違います';
-  }
-}
-
-function changeUserPass() {
-  const n1 = document.getElementById('s-new').value;
-  const n2 = document.getElementById('s-new2').value;
-  const msg = document.getElementById('pw-msg');
-  if (n1.length < 4) { msg.className = 'msg error'; msg.textContent = '4文字以上で設定してください'; return; }
-  if (n1 !== n2) { msg.className = 'msg error'; msg.textContent = 'パスワードが一致しません'; return; }
-  localStorage.setItem('vetpharm_user_pass', n1);
-  msg.className = 'msg ok'; msg.textContent = '✓ 共通パスワードを変更しました！研究室員に新しいパスワードを共有してください。';
-  document.getElementById('s-new').value = '';
-  document.getElementById('s-new2').value = '';
 }
 
 function showModal(item) {
