@@ -29,9 +29,8 @@
     }
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;padding-top:var(--safe-top);padding-bottom:calc(var(--safe-bottom) + 16px);}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;padding-top:var(--safe-top);padding-bottom:calc(var(--safe-bottom)+16px);}
 
-  /* ロック画面 */
   .lock-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1.5rem;background:var(--bg3);}
   .lock-icon{font-size:48px;margin-bottom:1.5rem;}
   .lock-title{font-size:20px;font-weight:600;color:var(--text);margin-bottom:6px;text-align:center;}
@@ -44,7 +43,6 @@
   .lock-error{font-size:13px;color:var(--danger);min-height:18px;text-align:center;}
   .lock-hint{font-size:12px;color:var(--text3);text-align:center;margin-top:6px;}
 
-  /* アプリ */
   .topbar{background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 16px;position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;}
   .topbar-title{font-size:16px;font-weight:600;color:var(--text);}
   .topbar-right{display:flex;gap:8px;}
@@ -69,8 +67,8 @@
   .badge-low{background:#faeeda;color:#854f0b;}
   .badge-out{background:#fcebeb;color:#a32d2d;}
   .badge-unknown{background:#f1efe8;color:#5f5e5a;}
-  .item-location{font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:4px;}
-  .item-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:0;}
+  .item-location{font-size:12px;color:var(--text2);margin-bottom:8px;}
+  .item-meta{display:flex;align-items:center;justify-content:space-between;}
   .cat-badge{font-size:11px;padding:3px 9px;border-radius:20px;}
   .cat-試薬{background:#eeedfe;color:#3c3489;}
   .cat-試薬一般{background:#e6f1fb;color:#185fa5;}
@@ -92,7 +90,6 @@
   .action-btn:active{background:var(--bg2);}
   .empty{text-align:center;color:var(--text3);padding:3rem 0;font-size:14px;}
 
-  /* モーダル */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;display:flex;align-items:flex-end;padding-bottom:var(--safe-bottom);}
   .modal{background:var(--bg);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + var(--safe-bottom));width:100%;max-height:90vh;overflow-y:auto;}
   .modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px;}
@@ -109,8 +106,11 @@
   .msg.ok{color:var(--success);}
   .setting-section{margin-bottom:20px;padding-bottom:20px;border-bottom:0.5px solid var(--border);}
   .setting-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
-  .setting-desc{font-size:13px;color:var(--text2);margin-bottom:10px;}
+  .setting-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;}
+  .setting-desc{font-size:13px;color:var(--text2);margin-bottom:12px;}
   .btn-logout{width:100%;padding:12px;border:0.5px solid var(--danger);border-radius:var(--radius-md);background:none;color:var(--danger);font-size:14px;font-weight:500;cursor:pointer;}
+  .admin-gate{background:var(--bg2);border-radius:var(--radius-md);padding:14px;margin-bottom:16px;border:0.5px solid var(--border);}
+  .admin-gate p{font-size:13px;color:var(--text2);margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -141,15 +141,20 @@
 <div id="modal-area"></div>
 
 <script>
-const STORAGE_KEY='vetpharm_items';
-const AUTH_KEY='vetpharm_auth';
-const CATS=['試薬','試薬(一般)','試薬(細胞培養)','消耗品(一般)','消耗品(細胞培養)','消耗品','抗体'];
-const MAX_ATTEMPTS=5;
-const LOCKOUT_MS=5*60*1000;
+// ===== パスワード設定 =====
+// 共通パスワード（研究室員全員が使う）
+const USER_PASS = 'lab2024';
+// 管理者パスワード（あなただけが知っている）
+const ADMIN_PASS = 'admin9999';
+// =========================
 
-let currentPass=localStorage.getItem('vetpharm_pass')||'lab2024';
+const STORAGE_KEY = 'vetpharm_items';
+const AUTH_KEY = 'vetpharm_auth';
+const CATS = ['試薬','試薬(一般)','試薬(細胞培養)','消耗品(一般)','消耗品(細胞培養)','消耗品','抗体'];
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 5 * 60 * 1000;
 
-let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')||[
+let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || [
   {id:1,name:'BCA assay',loc:'ウエスタンの棚',cat:'試薬',qty:null,min:1},
   {id:2,name:'Trident femto',loc:'ショーケース冷蔵庫(旧い方)',cat:'試薬',qty:null,min:1},
   {id:3,name:'LumiFlash prime',loc:'ショーケース冷蔵庫(旧い方)',cat:'試薬',qty:null,min:1},
@@ -199,23 +204,23 @@ let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')||[
   {id:47,name:'プロテアーゼ阻害剤',loc:'マイナス30℃冷凍庫①',cat:'試薬(一般)',qty:null,min:1},
   {id:48,name:'サンプルボックス',loc:'マイナス30℃冷凍庫②',cat:'消耗品',qty:null,min:5},
 ];
-let nextId=Math.max(...items.map(i=>i.id),0)+1;
-function saveItems(){localStorage.setItem(STORAGE_KEY,JSON.stringify(items));}
+let nextId = Math.max(...items.map(i => i.id), 0) + 1;
+function saveItems() { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
 
-function getAuth(){return JSON.parse(localStorage.getItem(AUTH_KEY)||'{"attempts":0,"lockedUntil":0,"authed":false}');}
-function setAuth(a){localStorage.setItem(AUTH_KEY,JSON.stringify(a));}
+function getAuth() { return JSON.parse(localStorage.getItem(AUTH_KEY) || '{"attempts":0,"lockedUntil":0,"authed":false}'); }
+function setAuth(a) { localStorage.setItem(AUTH_KEY, JSON.stringify(a)); }
 
-function checkLock(){
-  const a=getAuth();
-  if(a.authed){showApp();return;}
+function checkLock() {
+  const a = getAuth();
+  if (a.authed) { showApp(); return; }
   showLock();
 }
 
-function showLock(){
-  const a=getAuth();
-  const locked=a.lockedUntil>Date.now();
-  const remaining=locked?Math.ceil((a.lockedUntil-Date.now())/1000/60):0;
-  document.getElementById('lock-area').innerHTML=`
+function showLock() {
+  const a = getAuth();
+  const locked = a.lockedUntil > Date.now();
+  const remaining = locked ? Math.ceil((a.lockedUntil - Date.now()) / 1000 / 60) : 0;
+  document.getElementById('lock-area').innerHTML = `
     <div class="lock-screen">
       <div class="lock-icon">🔒</div>
       <div class="lock-title">獣医薬理在庫管理</div>
@@ -229,81 +234,83 @@ function showLock(){
             </div>
             <button class="lock-btn" onclick="tryLogin()">ログイン</button>
             <div class="lock-error" id="lock-error"></div>
-            <div class="lock-hint" id="lock-hint">${a.attempts>0?`残り${MAX_ATTEMPTS-a.attempts}回の入力が可能です`:''}</div>`
+            <div class="lock-hint" id="lock-hint">${a.attempts > 0 ? `残り${MAX_ATTEMPTS - a.attempts}回の入力が可能です` : ''}</div>`
         }
       </div>
     </div>`;
-  if(!locked) setTimeout(()=>{const el=document.getElementById('pw-input');if(el)el.focus();},100);
+  if (!locked) setTimeout(() => { const el = document.getElementById('pw-input'); if (el) el.focus(); }, 100);
 }
 
-function toggleEye(){
-  const inp=document.getElementById('pw-input');
-  const btn=document.getElementById('eye-btn');
-  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
-  else{inp.type='password';btn.textContent='👁';}
+function toggleEye() {
+  const inp = document.getElementById('pw-input');
+  const btn = document.getElementById('eye-btn');
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
 }
 
-function tryLogin(){
-  const inp=document.getElementById('pw-input');
-  if(!inp)return;
-  const a=getAuth();
-  if(inp.value===currentPass){
-    a.attempts=0;a.lockedUntil=0;a.authed=true;setAuth(a);
-    document.getElementById('lock-area').innerHTML='';
+function tryLogin() {
+  const inp = document.getElementById('pw-input');
+  if (!inp) return;
+  const val = inp.value;
+  const a = getAuth();
+  const currentUserPass = localStorage.getItem('vetpharm_user_pass') || USER_PASS;
+  if (val === currentUserPass || val === ADMIN_PASS) {
+    a.attempts = 0; a.lockedUntil = 0; a.authed = true; setAuth(a);
+    document.getElementById('lock-area').innerHTML = '';
     showApp();
   } else {
-    a.attempts=(a.attempts||0)+1;
-    if(a.attempts>=MAX_ATTEMPTS){a.lockedUntil=Date.now()+LOCKOUT_MS;a.attempts=0;}
-    setAuth(a);inp.value='';
-    const e=document.getElementById('lock-error');
-    const h=document.getElementById('lock-hint');
-    if(e)e.textContent='パスワードが違います';
-    if(a.lockedUntil>0){showLock();}
-    else if(h)h.textContent=`残り${MAX_ATTEMPTS-a.attempts}回の入力が可能です`;
+    a.attempts = (a.attempts || 0) + 1;
+    if (a.attempts >= MAX_ATTEMPTS) { a.lockedUntil = Date.now() + LOCKOUT_MS; a.attempts = 0; }
+    setAuth(a); inp.value = '';
+    const e = document.getElementById('lock-error');
+    const h = document.getElementById('lock-hint');
+    if (e) e.textContent = 'パスワードが違います';
+    if (a.lockedUntil > 0) { showLock(); }
+    else if (h) h.textContent = `残り${MAX_ATTEMPTS - a.attempts}回の入力が可能です`;
   }
 }
 
-function logout(){
-  const a=getAuth();a.authed=false;setAuth(a);
-  document.getElementById('app-area').style.display='none';
-  closeModal();showLock();
+function logout() {
+  const a = getAuth(); a.authed = false; setAuth(a);
+  document.getElementById('app-area').style.display = 'none';
+  closeModal(); showLock();
 }
 
-function showApp(){
-  document.getElementById('app-area').style.display='block';
+function showApp() {
+  document.getElementById('app-area').style.display = 'block';
   render();
 }
 
-function catKey(c){return c.replace(/[()]/g,'');}
-function st(item){
-  if(item.qty===null)return 'unknown';
-  if(item.qty===0)return 'out';
-  if(item.qty<=item.min)return 'low';
+function catKey(c) { return c.replace(/[()]/g, ''); }
+function st(item) {
+  if (item.qty === null) return 'unknown';
+  if (item.qty === 0) return 'out';
+  if (item.qty <= item.min) return 'low';
   return 'ok';
 }
 
-function render(){
-  const q=document.getElementById('search').value.toLowerCase();
-  const cat=document.getElementById('cat-filter').value;
-  const filtered=items.filter(i=>(!q||i.name.toLowerCase().includes(q)||i.loc.toLowerCase().includes(q))&&(!cat||i.cat===cat));
-  const withQty=items.filter(i=>i.qty!==null);
-  const low=withQty.filter(i=>st(i)==='low').length;
-  const out=withQty.filter(i=>st(i)==='out').length;
-  const unknown=items.filter(i=>i.qty===null).length;
-  document.getElementById('summary').innerHTML=`
+function render() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const cat = document.getElementById('cat-filter').value;
+  const filtered = items.filter(i => (!q || i.name.toLowerCase().includes(q) || i.loc.toLowerCase().includes(q)) && (!cat || i.cat === cat));
+  const withQty = items.filter(i => i.qty !== null);
+  const low = withQty.filter(i => st(i) === 'low').length;
+  const out = withQty.filter(i => st(i) === 'out').length;
+  const unknown = items.filter(i => i.qty === null).length;
+  document.getElementById('summary').innerHTML = `
     <div class="metric"><div class="metric-label">登録品目数</div><div class="metric-value">${items.length}</div></div>
     <div class="metric"><div class="metric-label">未入力 / 要注意 / 切れ</div><div class="metric-value danger">${unknown} / ${low} / ${out}</div></div>`;
-  const alerts=withQty.filter(i=>st(i)!=='ok');
-  document.getElementById('alert-area').innerHTML=alerts.length
-    ?`<div class="alert-banner">⚠️ <span><strong>${alerts.length}件</strong>要確認：${alerts.map(i=>i.name).join('、')}</span></div>`:'';
-  const bc={ok:'badge-ok',low:'badge-low',out:'badge-out',unknown:'badge-unknown'};
-  const bt={ok:'在庫あり',low:'在庫少',out:'在庫切れ',unknown:'未入力'};
-  document.getElementById('card-list').innerHTML=filtered.length?filtered.map(item=>{
-    const s=st(item);
-    const qtySection=item.qty===null
-      ?`<span class="qty-unknown">在庫数未入力</span><button class="qbtn" onclick="setQty(${item.id})" style="margin-left:6px;font-size:12px;width:auto;padding:0 8px;">✏️</button>`
-      :`<div class="qty-ctrl"><button class="qbtn" onclick="chg(${item.id},-1)" aria-label="減らす">−</button><span class="qty-num">${item.qty}</span><button class="qbtn" onclick="chg(${item.id},1)" aria-label="増やす">＋</button></div><span class="qty-label">/ 最低${item.min}</span>`;
-    return`<div class="item-card">
+  const alerts = withQty.filter(i => st(i) !== 'ok');
+  document.getElementById('alert-area').innerHTML = alerts.length
+    ? `<div class="alert-banner">⚠️ <span><strong>${alerts.length}件</strong>要確認：${alerts.map(i => i.name).join('、')}</span></div>` : '';
+  const bc = { ok: 'badge-ok', low: 'badge-low', out: 'badge-out', unknown: 'badge-unknown' };
+  const bt = { ok: '在庫あり', low: '在庫少', out: '在庫切れ', unknown: '未入力' };
+  document.getElementById('card-list').innerHTML = filtered.length ? filtered.map(item => {
+    const s = st(item);
+    const qtySection = item.qty === null
+      ? `<span class="qty-unknown">在庫数未入力</span><button class="qbtn" onclick="setQty(${item.id})" style="margin-left:6px;font-size:12px;width:auto;padding:0 8px;">✏️</button>`
+      : `<div class="qty-ctrl"><button class="qbtn" onclick="chg(${item.id},-1)" aria-label="減らす">−</button><span class="qty-num">${item.qty}</span><button class="qbtn" onclick="chg(${item.id},1)" aria-label="増やす">＋</button></div><span class="qty-label">/ 最低${item.min}</span>`;
+    return `<div class="item-card">
       <div class="item-top"><span class="item-name">${item.name}</span><span class="badge ${bc[s]}">${bt[s]}</span></div>
       <div class="item-location">📍 ${item.loc}</div>
       <div class="item-meta"><span class="cat-badge cat-${catKey(item.cat)}">${item.cat}</span><div class="qty-row">${qtySection}</div></div>
@@ -312,101 +319,122 @@ function render(){
         <button class="action-btn danger" onclick="del(${item.id})">🗑 削除</button>
       </div>
     </div>`;
-  }).join(''):`<div class="empty">📭 該当する品目がありません</div>`;
+  }).join('') : `<div class="empty">📭 該当する品目がありません</div>`;
 }
 
-function chg(id,d){const i=items.find(x=>x.id===id);if(i){i.qty=Math.max(0,i.qty+d);saveItems();render();}}
-function del(id){if(confirm('削除しますか？')){items=items.filter(x=>x.id!==id);saveItems();render();}}
-function openAdd(){showModal(null);}
-function openEdit(id){showModal(items.find(x=>x.id===id));}
-function setQty(id){
-  const item=items.find(x=>x.id===id);
-  const v=prompt(`「${item.name}」の現在の在庫数を入力してください`);
-  if(v===null)return;
-  const n=parseInt(v);
-  if(!isNaN(n)&&n>=0){item.qty=n;saveItems();render();}
+function chg(id, d) { const i = items.find(x => x.id === id); if (i) { i.qty = Math.max(0, i.qty + d); saveItems(); render(); } }
+function del(id) { if (confirm('削除しますか？')) { items = items.filter(x => x.id !== id); saveItems(); render(); } }
+function openAdd() { showModal(null); }
+function openEdit(id) { showModal(items.find(x => x.id === id)); }
+function setQty(id) {
+  const item = items.find(x => x.id === id);
+  const v = prompt(`「${item.name}」の現在の在庫数を入力してください`);
+  if (v === null) return;
+  const n = parseInt(v);
+  if (!isNaN(n) && n >= 0) { item.qty = n; saveItems(); render(); }
 }
 
-function openSettings(){
-  const overlay=document.createElement('div');
-  overlay.className='modal-overlay';
-  overlay.onclick=e=>{if(e.target===overlay)closeModal();};
-  overlay.innerHTML=`
+function openSettings() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = e => { if (e.target === overlay) closeModal(); };
+  overlay.innerHTML = `
     <div class="modal">
       <div class="modal-handle"></div>
       <h3>⚙️ 設定</h3>
+
       <div class="setting-section">
-        <div class="setting-desc">パスワードを変更します。4文字以上で設定してください。</div>
-        <div class="form-row"><label>現在のパスワード</label><input type="password" id="s-old" placeholder="現在のパスワード"></div>
-        <div class="form-row"><label>新しいパスワード</label><input type="password" id="s-new" placeholder="新しいパスワード（4文字以上）"></div>
-        <div class="form-row"><label>確認（もう一度）</label><input type="password" id="s-new2" placeholder="新しいパスワード（確認）"></div>
-        <div class="msg error" id="pw-msg"></div>
-        <button class="btn-save" style="width:100%;margin-top:8px;" onclick="changePassword()">パスワードを変更する</button>
+        <div class="setting-title">🔑 管理者メニュー</div>
+        <div class="setting-desc">管理者パスワードを入力すると共通パスワードを変更できます。</div>
+        <div class="admin-gate">
+          <p>管理者パスワードを入力してください</p>
+          <div class="form-row" style="margin-bottom:8px;">
+            <input type="password" id="admin-gate-pw" placeholder="管理者パスワード">
+          </div>
+          <button class="btn-save" style="width:100%;" onclick="unlockAdmin()">管理者として認証する</button>
+          <div class="msg error" id="admin-gate-msg"></div>
+        </div>
+        <div id="admin-panel" style="display:none;">
+          <div class="form-row"><label>新しい共通パスワード</label><input type="password" id="s-new" placeholder="新しいパスワード（4文字以上）"></div>
+          <div class="form-row"><label>確認（もう一度）</label><input type="password" id="s-new2" placeholder="新しいパスワード（確認）"></div>
+          <div class="msg error" id="pw-msg"></div>
+          <button class="btn-save" style="width:100%;margin-top:8px;" onclick="changeUserPass()">共通パスワードを変更する</button>
+        </div>
       </div>
+
       <div class="setting-section">
-        <div class="setting-desc">ログアウトすると次回起動時にパスワード入力が必要になります。</div>
+        <div class="setting-title">🚪 ログアウト</div>
+        <div class="setting-desc">次回起動時にパスワード入力が必要になります。</div>
         <button class="btn-logout" onclick="logout()">ログアウト</button>
       </div>
+
       <div class="modal-actions"><button class="btn-cancel" style="flex:1;" onclick="closeModal()">閉じる</button></div>
     </div>`;
   document.getElementById('modal-area').appendChild(overlay);
 }
 
-function changePassword(){
-  const old=document.getElementById('s-old').value;
-  const n1=document.getElementById('s-new').value;
-  const n2=document.getElementById('s-new2').value;
-  const msg=document.getElementById('pw-msg');
-  if(old!==currentPass){msg.className='msg error';msg.textContent='現在のパスワードが違います';return;}
-  if(n1.length<4){msg.className='msg error';msg.textContent='4文字以上で設定してください';return;}
-  if(n1!==n2){msg.className='msg error';msg.textContent='新しいパスワードが一致しません';return;}
-  currentPass=n1;
-  localStorage.setItem('vetpharm_pass',n1);
-  msg.className='msg ok';msg.textContent='✓ パスワードを変更しました！';
-  setTimeout(()=>{msg.textContent='';},2000);
-  document.getElementById('s-old').value='';
-  document.getElementById('s-new').value='';
-  document.getElementById('s-new2').value='';
+function unlockAdmin() {
+  const pw = document.getElementById('admin-gate-pw').value;
+  const msg = document.getElementById('admin-gate-msg');
+  if (pw === ADMIN_PASS) {
+    document.getElementById('admin-panel').style.display = 'block';
+    document.getElementById('admin-gate-pw').closest('.admin-gate').style.display = 'none';
+    msg.textContent = '';
+  } else {
+    msg.textContent = '管理者パスワードが違います';
+  }
 }
 
-function showModal(item){
-  const isEdit=!!item;
-  const overlay=document.createElement('div');
-  overlay.className='modal-overlay';
-  overlay.onclick=e=>{if(e.target===overlay)closeModal();};
-  overlay.innerHTML=`
+function changeUserPass() {
+  const n1 = document.getElementById('s-new').value;
+  const n2 = document.getElementById('s-new2').value;
+  const msg = document.getElementById('pw-msg');
+  if (n1.length < 4) { msg.className = 'msg error'; msg.textContent = '4文字以上で設定してください'; return; }
+  if (n1 !== n2) { msg.className = 'msg error'; msg.textContent = 'パスワードが一致しません'; return; }
+  localStorage.setItem('vetpharm_user_pass', n1);
+  msg.className = 'msg ok'; msg.textContent = '✓ 共通パスワードを変更しました！研究室員に新しいパスワードを共有してください。';
+  document.getElementById('s-new').value = '';
+  document.getElementById('s-new2').value = '';
+}
+
+function showModal(item) {
+  const isEdit = !!item;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = e => { if (e.target === overlay) closeModal(); };
+  overlay.innerHTML = `
     <div class="modal">
       <div class="modal-handle"></div>
-      <h3>${isEdit?'品目を編集':'品目を追加'}</h3>
-      <div class="form-row"><label>品名</label><input id="m-name" type="text" value="${isEdit?item.name:''}" placeholder="例：ピペットチップ(200 μl)"></div>
-      <div class="form-row"><label>保管場所</label><input id="m-loc" type="text" value="${isEdit?item.loc:''}" placeholder="例：倉庫"></div>
-      <div class="form-row"><label>カテゴリ</label><select id="m-cat">${CATS.map(c=>`<option${isEdit&&item.cat===c?' selected':''}>${c}</option>`).join('')}</select></div>
-      <div class="form-row"><label>現在の在庫数</label><input id="m-qty" type="number" min="0" inputmode="numeric" value="${isEdit&&item.qty!==null?item.qty:''}"><div class="form-hint">空欄にすると「未入力」になります</div></div>
-      <div class="form-row"><label>最低在庫数（アラート基準）</label><input id="m-min" type="number" min="0" inputmode="numeric" value="${isEdit?item.min:1}"></div>
+      <h3>${isEdit ? '品目を編集' : '品目を追加'}</h3>
+      <div class="form-row"><label>品名</label><input id="m-name" type="text" value="${isEdit ? item.name : ''}" placeholder="例：ピペットチップ(200 μl)"></div>
+      <div class="form-row"><label>保管場所</label><input id="m-loc" type="text" value="${isEdit ? item.loc : ''}" placeholder="例：倉庫"></div>
+      <div class="form-row"><label>カテゴリ</label><select id="m-cat">${CATS.map(c => `<option${isEdit && item.cat === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
+      <div class="form-row"><label>現在の在庫数</label><input id="m-qty" type="number" min="0" inputmode="numeric" value="${isEdit && item.qty !== null ? item.qty : ''}"><div class="form-hint">空欄にすると「未入力」になります</div></div>
+      <div class="form-row"><label>最低在庫数（アラート基準）</label><input id="m-min" type="number" min="0" inputmode="numeric" value="${isEdit ? item.min : 1}"></div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
-        <button class="btn-save" onclick="saveItem(${isEdit?item.id:'null'})">${isEdit?'保存する':'追加する'}</button>
+        <button class="btn-save" onclick="saveItem(${isEdit ? item.id : 'null'})">${isEdit ? '保存する' : '追加する'}</button>
       </div>
     </div>`;
   document.getElementById('modal-area').appendChild(overlay);
-  setTimeout(()=>{const el=document.getElementById('m-name');if(el)el.focus();},100);
+  setTimeout(() => { const el = document.getElementById('m-name'); if (el) el.focus(); }, 100);
 }
 
-function closeModal(){document.getElementById('modal-area').innerHTML='';}
-function saveItem(id){
-  const name=document.getElementById('m-name').value.trim();
-  const loc=document.getElementById('m-loc').value.trim();
-  const cat=document.getElementById('m-cat').value;
-  const qtyRaw=document.getElementById('m-qty').value;
-  const qty=qtyRaw===''?null:Math.max(0,parseInt(qtyRaw)||0);
-  const min=parseInt(document.getElementById('m-min').value)||1;
-  if(!name){alert('品名を入力してください');return;}
-  if(id===null){items.push({id:nextId++,name,loc,cat,qty,min});}
-  else{const i=items.find(x=>x.id===id);if(i){i.name=name;i.loc=loc;i.cat=cat;i.qty=qty;i.min=min;}}
-  saveItems();closeModal();render();
+function closeModal() { document.getElementById('modal-area').innerHTML = ''; }
+function saveItem(id) {
+  const name = document.getElementById('m-name').value.trim();
+  const loc = document.getElementById('m-loc').value.trim();
+  const cat = document.getElementById('m-cat').value;
+  const qtyRaw = document.getElementById('m-qty').value;
+  const qty = qtyRaw === '' ? null : Math.max(0, parseInt(qtyRaw) || 0);
+  const min = parseInt(document.getElementById('m-min').value) || 1;
+  if (!name) { alert('品名を入力してください'); return; }
+  if (id === null) { items.push({ id: nextId++, name, loc, cat, qty, min }); }
+  else { const i = items.find(x => x.id === id); if (i) { i.name = name; i.loc = loc; i.cat = cat; i.qty = qty; i.min = min; } }
+  saveItems(); closeModal(); render();
 }
 
-if('serviceWorker' in navigator){
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(console.error);
 }
 
