@@ -1,7 +1,7 @@
 {
-  "name": "備品在庫管理",
-  "short_name": "在庫管理",
-  "description": "オフィス備品の在庫をスマホで管理するアプリ",
+  "name": "獣医薬理在庫管理",
+  "short_name": "獣医薬理在庫",
+  "description": "獣医薬理研究室の在庫管理システム",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
